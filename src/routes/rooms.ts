@@ -56,8 +56,8 @@ router.post('/', async (req, res: Response) => {
     );
     const room = roomResult.rows[0];
 
-    await query(
-      'INSERT INTO devices (id, room_id, alias) VALUES ($1, $2, $3)',
+    const deviceResult = await query(
+      'INSERT INTO devices (id, room_id, alias) VALUES ($1, $2, $3) RETURNING id, alias, created_at',
       [deviceId, room.id, alias]
     );
 
@@ -72,7 +72,7 @@ router.post('/', async (req, res: Response) => {
 
     res.status(201).json({
       room: { id: room.id, code: room.code, created_at: room.created_at },
-      device: { id: deviceId, alias },
+      device: { id: deviceResult.rows[0].id, alias: deviceResult.rows[0].alias, created_at: deviceResult.rows[0].created_at },
     });
   } catch (err) {
     await query('ROLLBACK');
@@ -97,14 +97,14 @@ router.post('/join', async (req, res: Response) => {
     const deviceId = uuidv4();
     const room = roomResult.rows[0];
 
-    await query(
-      'INSERT INTO devices (id, room_id, alias) VALUES ($1, $2, $3)',
+    const deviceResult = await query(
+      'INSERT INTO devices (id, room_id, alias) VALUES ($1, $2, $3) RETURNING id, alias, created_at',
       [deviceId, room.id, alias]
     );
 
     res.json({
       room: { id: room.id, code: room.code, created_at: room.created_at },
-      device: { id: deviceId, alias },
+      device: { id: deviceResult.rows[0].id, alias: deviceResult.rows[0].alias, created_at: deviceResult.rows[0].created_at },
     });
   } catch (err) {
     console.error('Join room error:', err);
