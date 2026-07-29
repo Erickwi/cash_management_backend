@@ -1,3 +1,4 @@
+import { logger } from './utils/logger';
 import express from 'express';
 import cors from 'cors';
 import http from 'http';
@@ -46,7 +47,8 @@ setupSocketHandlers(io);
 
 const PORT = process.env.PORT || 3000;
 server.listen(PORT, () => {
-  console.log(`Cash Management API running on port ${PORT}`);
+  logger.info(`Cash Management API running on port ${PORT}`);
 });
 
 export { io };
+

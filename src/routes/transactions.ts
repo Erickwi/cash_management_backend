@@ -1,3 +1,4 @@
+import { logger } from '../utils/logger';
 import { Router, Response } from 'express';
 import { query } from '../db';
 import { RoomRequest } from '../middleware/room_auth';
@@ -38,7 +39,7 @@ router.get('/', async (req: RoomRequest, res: Response) => {
     const result = await query(sql, params);
     res.json(result.rows);
   } catch (err) {
-    console.error('Get transactions error:', err);
+    logger.error('Get transactions error:', err);
     res.status(500).json({ error: 'Internal server error' });
   }
 });
@@ -81,7 +82,7 @@ router.post('/', async (req: RoomRequest, res: Response) => {
 
     res.status(201).json(tx);
   } catch (err) {
-    console.error('Create transaction error:', err);
+    logger.error('Create transaction error:', err);
     res.status(500).json({ error: 'Internal server error' });
   }
 });
@@ -110,7 +111,7 @@ router.put('/:id', async (req: RoomRequest, res: Response) => {
 
     res.json(result.rows[0]);
   } catch (err) {
-    console.error('Update transaction error:', err);
+    logger.error('Update transaction error:', err);
     res.status(500).json({ error: 'Internal server error' });
   }
 });
@@ -135,7 +136,7 @@ router.patch('/:id/status', async (req: RoomRequest, res: Response) => {
 
     res.json(result.rows[0]);
   } catch (err) {
-    console.error('Update status error:', err);
+    logger.error('Update status error:', err);
     res.status(500).json({ error: 'Internal server error' });
   }
 });
@@ -153,9 +154,10 @@ router.delete('/:id', async (req: RoomRequest, res: Response) => {
 
     res.json({ success: true });
   } catch (err) {
-    console.error('Delete transaction error:', err);
+    logger.error('Delete transaction error:', err);
     res.status(500).json({ error: 'Internal server error' });
   }
 });
 
 export default router;
+

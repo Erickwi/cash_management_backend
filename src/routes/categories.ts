@@ -1,3 +1,4 @@
+import { logger } from '../utils/logger';
 import { Router, Response } from 'express';
 import { query } from '../db';
 import { RoomRequest } from '../middleware/room_auth';
@@ -12,7 +13,7 @@ router.get('/', async (req: RoomRequest, res: Response) => {
     );
     res.json(result.rows);
   } catch (err) {
-    console.error('Get categories error:', err);
+    logger.error('Get categories error:', err);
     res.status(500).json({ error: 'Internal server error' });
   }
 });
@@ -33,7 +34,7 @@ router.post('/', async (req: RoomRequest, res: Response) => {
 
     res.status(201).json(result.rows[0]);
   } catch (err) {
-    console.error('Create category error:', err);
+    logger.error('Create category error:', err);
     res.status(500).json({ error: 'Internal server error' });
   }
 });
@@ -54,7 +55,7 @@ router.put('/:id', async (req: RoomRequest, res: Response) => {
 
     res.json(result.rows[0]);
   } catch (err) {
-    console.error('Update category error:', err);
+    logger.error('Update category error:', err);
     res.status(500).json({ error: 'Internal server error' });
   }
 });
@@ -72,9 +73,10 @@ router.delete('/:id', async (req: RoomRequest, res: Response) => {
 
     res.json({ success: true });
   } catch (err) {
-    console.error('Delete category error:', err);
+    logger.error('Delete category error:', err);
     res.status(500).json({ error: 'Internal server error' });
   }
 });
 
 export default router;
+

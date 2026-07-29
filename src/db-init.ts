@@ -1,9 +1,10 @@
+import { logger } from './utils/logger';
 import { query } from './db';
 import fs from 'fs';
 import path from 'path';
 
 async function initDb() {
-  console.log('Initializing database...');
+  logger.info('Initializing database...');
   const sql = fs.readFileSync(path.join(__dirname, 'schema.sql'), 'utf8');
   const statements = sql
     .split(';')
@@ -13,17 +14,18 @@ async function initDb() {
   for (const stmt of statements) {
     try {
       await query(stmt);
-      console.log('Executed:', stmt.substring(0, 60) + '...');
+      logger.info('Executed:', stmt.substring(0, 60) + '...');
     } catch (err: any) {
-      console.error('Error executing:', stmt.substring(0, 60));
-      console.error(err.message);
+      logger.error('Error executing:', stmt.substring(0, 60));
+      logger.error(err.message);
     }
   }
-  console.log('Database initialization complete.');
+  logger.info('Database initialization complete.');
   process.exit(0);
 }
 
 initDb().catch(err => {
-  console.error('Database initialization failed:', err);
+  logger.error('Database initialization failed:', err);
   process.exit(1);
 });
+

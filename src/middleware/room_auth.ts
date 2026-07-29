@@ -1,3 +1,4 @@
+import { logger } from '../utils/logger';
 import { Request, Response, NextFunction } from 'express';
 import { query } from '../db';
 
@@ -37,7 +38,8 @@ export async function roomAuth(req: RoomRequest, res: Response, next: NextFuncti
     req.deviceId = deviceId;
     next();
   } catch (err) {
-    console.error('Auth error:', err);
+    logger.error('Auth error:', err);
     return res.status(500).json({ error: 'Internal server error' });
   }
 }
+

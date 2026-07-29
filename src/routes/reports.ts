@@ -1,3 +1,4 @@
+import { logger } from '../utils/logger';
 import { Router, Response } from 'express';
 import { query } from '../db';
 import { RoomRequest } from '../middleware/room_auth';
@@ -107,9 +108,10 @@ router.get('/monthly', async (req: RoomRequest, res: Response) => {
       expense_by_category: expenseByCategory.rows,
     });
   } catch (err) {
-    console.error('Report error:', err);
+    logger.error('Report error:', err);
     res.status(500).json({ error: 'Internal server error' });
   }
 });
 
 export default router;
+

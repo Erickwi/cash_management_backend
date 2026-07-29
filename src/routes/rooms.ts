@@ -1,3 +1,4 @@
+import { logger } from '../utils/logger';
 import { Router, Response } from 'express';
 import { query } from '../db';
 import { v4 as uuidv4 } from 'uuid';
@@ -76,7 +77,7 @@ router.post('/', async (req, res: Response) => {
     });
   } catch (err) {
     await query('ROLLBACK');
-    console.error('Create room error:', err);
+    logger.error('Create room error:', err);
     res.status(500).json({ error: 'Internal server error' });
   }
 });
@@ -107,7 +108,7 @@ router.post('/join', async (req, res: Response) => {
       device: { id: deviceResult.rows[0].id, alias: deviceResult.rows[0].alias, created_at: deviceResult.rows[0].created_at },
     });
   } catch (err) {
-    console.error('Join room error:', err);
+    logger.error('Join room error:', err);
     res.status(500).json({ error: 'Internal server error' });
   }
 });
@@ -131,7 +132,7 @@ router.get('/:code', async (req, res: Response) => {
 
     res.json(roomResult.rows[0]);
   } catch (err) {
-    console.error('Get room error:', err);
+    logger.error('Get room error:', err);
     res.status(500).json({ error: 'Internal server error' });
   }
 });
@@ -147,9 +148,10 @@ router.post('/fcm-token', async (req, res: Response) => {
     await query('UPDATE devices SET fcm_token = $1 WHERE id = $2', [fcmToken, deviceId]);
     res.json({ success: true });
   } catch (err) {
-    console.error('FCM token error:', err);
+    logger.error('FCM token error:', err);
     res.status(500).json({ error: 'Internal server error' });
   }
 });
 
 export default router;
+
