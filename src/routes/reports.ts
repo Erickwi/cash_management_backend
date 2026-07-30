@@ -3,6 +3,7 @@ import { Router, Response } from 'express';
 import { query } from '../db';
 import { RoomRequest } from '../middleware/room_auth';
 import dayjs from 'dayjs';
+import { logActivity } from '../services/log_service';
 
 const router = Router();
 
@@ -91,6 +92,14 @@ router.get('/monthly', async (req: RoomRequest, res: Response) => {
       [req.roomId]
     );
     const members = deviceResult.rows.map((r: any) => r.alias);
+
+    await logActivity({
+      roomId: req.roomId!,
+      deviceId: req.deviceId,
+      action: 'report_generated',
+      entityType: 'report',
+      details: { month, year, type: 'monthly' },
+    });
 
     res.json({
       month,

@@ -59,6 +59,21 @@ CREATE INDEX IF NOT EXISTS idx_transactions_type ON transactions(room_id, type);
 CREATE INDEX IF NOT EXISTS idx_recurring_room ON recurring_expenses(room_id);
 CREATE INDEX IF NOT EXISTS idx_categories_room ON categories(room_id);
 
+CREATE TABLE IF NOT EXISTS activity_logs (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  room_id UUID REFERENCES rooms(id) ON DELETE CASCADE,
+  device_id UUID REFERENCES devices(id) ON DELETE SET NULL,
+  device_alias VARCHAR(100),
+  action VARCHAR(50) NOT NULL,
+  entity_type VARCHAR(50),
+  entity_id UUID,
+  details JSONB,
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS idx_logs_room ON activity_logs(room_id, created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_logs_action ON activity_logs(action);
+
 -- Seed preset categories (inserted per room when created)
 -- 'Agua', 'Luz', 'Teléfono', 'Internet', 'Gas', 'Supermercado',
 -- 'Transporte', 'Renta', 'Seguros', 'Salud', 'Educación',

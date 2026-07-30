@@ -2,6 +2,7 @@ import { logger } from '../utils/logger';
 import { Router, Response } from 'express';
 import { query } from '../db';
 import { v4 as uuidv4 } from 'uuid';
+import { logActivity, getRoomLogs } from '../services/log_service';
 
 const router = Router();
 
@@ -71,6 +72,16 @@ router.post('/', async (req, res: Response) => {
 
     await query('COMMIT');
 
+    await logActivity({
+      roomId: room.id,
+      deviceId: deviceId,
+      deviceAlias: alias,
+      action: 'room_created',
+      entityType: 'room',
+      entityId: room.id,
+      details: { code },
+    });
+
     res.status(201).json({
       room: { id: room.id, code: room.code, created_at: room.created_at },
       device: { id: deviceResult.rows[0].id, alias: deviceResult.rows[0].alias, created_at: deviceResult.rows[0].created_at },
@@ -103,6 +114,16 @@ router.post('/join', async (req, res: Response) => {
       [deviceId, room.id, alias]
     );
 
+    await logActivity({
+      roomId: room.id,
+      deviceId: deviceId,
+      deviceAlias: alias,
+      action: 'room_joined',
+      entityType: 'device',
+      entityId: deviceId,
+      details: { code: room.code },
+    });
+
     res.json({
       room: { id: room.id, code: room.code, created_at: room.created_at },
       device: { id: deviceResult.rows[0].id, alias: deviceResult.rows[0].alias, created_at: deviceResult.rows[0].created_at },
@@ -133,6 +154,25 @@ router.get('/:code', async (req, res: Response) => {
     res.json(roomResult.rows[0]);
   } catch (err) {
     logger.error('Get room error:', err);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// Get room activity logs
+router.get('/:code/logs', async (req, res: Response) => {
+  try {
+    const roomResult = await query('SELECT id FROM rooms WHERE code = $1', [req.params.code.toUpperCase()]);
+    if (roomResult.rows.length === 0) {
+      return res.status(404).json({ error: 'Room not found' });
+    }
+
+    const limit = parseInt(req.query.limit as string) || 50;
+    const offset = parseInt(req.query.offset as string) || 0;
+
+    const logs = await getRoomLogs(roomResult.rows[0].id, limit, offset);
+    res.json(logs);
+  } catch (err) {
+    logger.error('Get logs error:', err);
     res.status(500).json({ error: 'Internal server error' });
   }
 });

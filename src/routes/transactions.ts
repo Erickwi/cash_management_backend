@@ -3,6 +3,7 @@ import { Router, Response } from 'express';
 import { query } from '../db';
 import { RoomRequest } from '../middleware/room_auth';
 import dayjs from 'dayjs';
+import { logActivity } from '../services/log_service';
 
 const router = Router();
 
@@ -80,6 +81,15 @@ router.post('/', async (req: RoomRequest, res: Response) => {
     tx.category_icon = catResult.rows[0]?.icon || null;
     tx.category_color = catResult.rows[0]?.color || null;
 
+    await logActivity({
+      roomId: req.roomId!,
+      deviceId: req.deviceId,
+      action: `transaction_created_${type}`,
+      entityType: 'transaction',
+      entityId: tx.id,
+      details: { type, amount, description, category: catResult.rows[0]?.name },
+    });
+
     res.status(201).json(tx);
   } catch (err) {
     logger.error('Create transaction error:', err);
@@ -109,6 +119,15 @@ router.put('/:id', async (req: RoomRequest, res: Response) => {
       return res.status(404).json({ error: 'Transaction not found' });
     }
 
+    await logActivity({
+      roomId: req.roomId!,
+      deviceId: req.deviceId,
+      action: 'transaction_updated',
+      entityType: 'transaction',
+      entityId: req.params.id as string,
+      details: { amount, description, type },
+    });
+
     res.json(result.rows[0]);
   } catch (err) {
     logger.error('Update transaction error:', err);
@@ -134,6 +153,15 @@ router.patch('/:id/status', async (req: RoomRequest, res: Response) => {
       return res.status(404).json({ error: 'Transaction not found' });
     }
 
+    await logActivity({
+      roomId: req.roomId!,
+      deviceId: req.deviceId,
+      action: 'transaction_status_changed',
+      entityType: 'transaction',
+      entityId: req.params.id as string,
+      details: { status },
+    });
+
     res.json(result.rows[0]);
   } catch (err) {
     logger.error('Update status error:', err);
@@ -151,6 +179,14 @@ router.delete('/:id', async (req: RoomRequest, res: Response) => {
     if (result.rows.length === 0) {
       return res.status(404).json({ error: 'Transaction not found' });
     }
+
+    await logActivity({
+      roomId: req.roomId!,
+      deviceId: req.deviceId,
+      action: 'transaction_deleted',
+      entityType: 'transaction',
+      entityId: req.params.id as string,
+    });
 
     res.json({ success: true });
   } catch (err) {

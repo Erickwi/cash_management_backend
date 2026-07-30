@@ -3,6 +3,7 @@ import { Router, Response } from 'express';
 import { query } from '../db';
 import { RoomRequest } from '../middleware/room_auth';
 import dayjs from 'dayjs';
+import { logActivity } from '../services/log_service';
 
 const router = Router();
 
@@ -42,6 +43,15 @@ router.post('/', async (req: RoomRequest, res: Response) => {
       [req.roomId, category_id, amount, description || '', preferred_day]
     );
 
+    await logActivity({
+      roomId: req.roomId!,
+      deviceId: req.deviceId,
+      action: 'recurring_created',
+      entityType: 'recurring_expense',
+      entityId: result.rows[0].id,
+      details: { amount, description, preferred_day },
+    });
+
     res.status(201).json(result.rows[0]);
   } catch (err) {
     logger.error('Create recurring error:', err);
@@ -69,6 +79,15 @@ router.put('/:id', async (req: RoomRequest, res: Response) => {
       return res.status(404).json({ error: 'Recurring expense not found' });
     }
 
+    await logActivity({
+      roomId: req.roomId!,
+      deviceId: req.deviceId,
+      action: 'recurring_updated',
+      entityType: 'recurring_expense',
+      entityId: req.params.id as string,
+      details: { amount, description, preferred_day, is_active },
+    });
+
     res.json(result.rows[0]);
   } catch (err) {
     logger.error('Update recurring error:', err);
@@ -86,6 +105,14 @@ router.delete('/:id', async (req: RoomRequest, res: Response) => {
     if (result.rows.length === 0) {
       return res.status(404).json({ error: 'Recurring expense not found' });
     }
+
+    await logActivity({
+      roomId: req.roomId!,
+      deviceId: req.deviceId,
+      action: 'recurring_deleted',
+      entityType: 'recurring_expense',
+      entityId: req.params.id as string,
+    });
 
     res.json({ success: true });
   } catch (err) {
@@ -134,6 +161,16 @@ router.post('/generate', async (req: RoomRequest, res: Response) => {
       );
 
       generated.push(tx.rows[0]);
+    }
+
+    if (generated.length > 0) {
+      await logActivity({
+        roomId: req.roomId!,
+        deviceId: req.deviceId,
+        action: 'recurring_generated',
+        entityType: 'transaction',
+        details: { month, year, count: generated.length },
+      });
     }
 
     res.json({ generated, count: generated.length });
